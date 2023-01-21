@@ -31,14 +31,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun operationAction(view: View) {
-        if (view is Button) {
-            if (canAddOperation && !canCalculate) {
+        if (view is Button && canAddOperation) {
+            if (!canCalculate) {
                 output.append(view.text)
                 canAddOperation = false
                 canCalculate = true
-            } else if (canCalculate) {
+            } else {
                 output.text = autoCalculateResults()
-                canCalculate = false
+                canAddOperation = false
             }
             isEqualPreviousClick = false
         }
@@ -58,6 +58,12 @@ class MainActivity : AppCompatActivity() {
             if (length - 1 == 0) {
                 output.text = "0"
                 reset = true
+            } else if (output.text.endsWith('+') || output.text.endsWith('−') ||
+                output.text.endsWith('×') || output.text.endsWith('÷') || output.text.endsWith('%')
+            ) {
+                output.text = output.text.subSequence(0, length - 1)
+                canCalculate = false
+                canAddOperation = true
             } else
                 output.text = output.text.subSequence(0, length - 1)
         }
@@ -65,88 +71,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun equalsAction(view: View) {
-        output.text = autoCalculateResults()
+        output.text = calculateResult()
         canCalculate = false
         isEqualPreviousClick = true
     }
 
-    private fun calculateResults(): String {
-        val digitsOperators = mutableListOf<Any>()
-        var currentDigit = ""
-        for (character in output.text) {
-            if (character.isDigit() || character == '.')
-                currentDigit += character
-            else {
-                digitsOperators.add(currentDigit.toFloat())
-                currentDigit = ""
-                digitsOperators.add(character)
-            }
-        }
-
-        if (currentDigit != "")
-            digitsOperators.add(currentDigit.toFloat())
-        if (digitsOperators.isEmpty()) return ""
-
-        var timesDivision = digitsOperators
-        while (timesDivision.contains('×') || timesDivision.contains('÷')) {
-            val newList = mutableListOf<Any>()
-            var restartIndex = timesDivision.size
-
-            for (i in timesDivision.indices) {
-                if (timesDivision[i] is Char && i != timesDivision.lastIndex && i < restartIndex) {
-                    val operator = timesDivision[i]
-                    val prevDigit = timesDivision[i - 1] as Float
-                    val nextDigit = timesDivision[i + 1] as Float
-                    when (operator) {
-                        '×' -> {
-                            newList.add(prevDigit * nextDigit)
-                            restartIndex = i + 1
-                        }
-                        '÷' -> {
-                            newList.add(prevDigit / nextDigit)
-                            restartIndex = i + 1
-                        }
-                        else -> {
-                            newList.add(prevDigit)
-                            newList.add(operator)
-                        }
-                    }
-                }
-
-                if (i > restartIndex)
-                    newList.add(timesDivision[i])
-            }
-            timesDivision = newList
-        }
-        if (timesDivision.isEmpty()) return ""
-
-        var result = timesDivision[0] as Float
-
-        for (i in timesDivision.indices) {
-            if (timesDivision[i] is Char && i != timesDivision.lastIndex) {
-                val operator = timesDivision[i]
-                val nextDigit = timesDivision[i + 1] as Float
-                if (operator == '+') {
-                    result += nextDigit
-                    println("add")
-                }
-                if (operator == '−') {
-                    result -= nextDigit
-                    println("sous")
-                }
-            }
-        }
-
-        val stringResult = result.toString()
-        val indexOfDot = stringResult.indexOf('.')
-
-        if (stringResult.substring(indexOfDot) == ".0")
-            return stringResult.substring(0, indexOfDot)
-        else
-            return stringResult
-    }
-
-    private fun autoCalculateResults(): String {
+    private fun calculateResult(): String {
         var digitsOperators = mutableListOf<Any>()
         var currentDigit = ""
         for (character in output.text) {
@@ -182,13 +112,14 @@ class MainActivity : AppCompatActivity() {
                     result /= nextDigit
                 }
                 if (operator == '%') {
-                    print("$result mod $nextDigit = ")
                     result %= nextDigit
-                    println("$result")
                 }
             }
         }
+        return stringifyResult(result)
+    }
 
+    private fun stringifyResult(result: Float): String {
         val stringResult = result.toString()
         val indexOfDot = stringResult.indexOf('.')
 
@@ -196,6 +127,62 @@ class MainActivity : AppCompatActivity() {
             return stringResult.substring(0, indexOfDot)
         else
             return stringResult
+    }
+
+    private fun stringifyResult(result: Float, operator: Any?): String {
+        val stringResult = result.toString()
+        val indexOfDot = stringResult.indexOf('.')
+        if (stringResult.substring(indexOfDot) == ".0")
+            return stringResult.substring(0, indexOfDot) + operator as Char
+        else
+            return stringResult + operator as Char
+    }
+
+    private fun autoCalculateResults(): String {
+        val digitsOperators = mutableListOf<Any>()
+        var currentDigit = ""
+        for (character in output.text) {
+            if (character.isDigit() || character == '.')
+                currentDigit += character
+            else {
+                digitsOperators.add(currentDigit.toFloat())
+                currentDigit = ""
+                digitsOperators.add(character)
+            }
+        }
+
+        if (currentDigit != "")
+            digitsOperators.add(currentDigit.toFloat())
+        if (digitsOperators.isEmpty()) return ""
+
+        var result = digitsOperators[0] as Float
+
+        var operatorParam: Any? = null
+
+        for (i in digitsOperators.indices) {
+            if (digitsOperators[i] is Char && i != digitsOperators.lastIndex) {
+                val operator = digitsOperators[i]
+                val nextDigit = digitsOperators[i + 1] as Float
+                if (operator == '+') {
+                    result += nextDigit
+                }
+                if (operator == '−') {
+                    result -= nextDigit
+                }
+                if (operator == '×') {
+                    result *= nextDigit
+                }
+                if (operator == '÷') {
+                    result /= nextDigit
+                }
+                if (operator == '%') {
+                    result %= nextDigit
+                }
+                operatorParam = operator as Char
+            }
+        }
+
+        return stringifyResult(result, operatorParam)
     }
 
     private fun addSubtractCalculate(passedList: MutableList<Any>): Float {
@@ -277,4 +264,5 @@ class MainActivity : AppCompatActivity() {
 
         return list
     }
+
 }

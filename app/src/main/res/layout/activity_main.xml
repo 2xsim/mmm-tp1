@@ -448,10 +448,10 @@
                     android:layout_height="match_parent"
                     android:background="?selectableItemBackground"
                     android:gravity="center"
-                    android:onClick="operationAction"
+                    android:onClick="negAction"
                     android:text="+/-"
                     android:textColor="@color/white"
-                    android:textSize="24sp"></Button>
+                    android:textSize="24sp" />
 
             </androidx.cardview.widget.CardView>
 
@@ -471,7 +471,7 @@
                     android:onClick="numberAction"
                     android:text="0"
                     android:textColor="@color/white"
-                    android:textSize="30sp"></Button>
+                    android:textSize="30sp" />
 
             </androidx.cardview.widget.CardView>
 
