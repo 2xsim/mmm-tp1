@@ -22,9 +22,9 @@ class MainActivity : AppCompatActivity() {
         if (view is Button) {
             if (isEqualPreviousClick || reset) {
                 output.text = view.text
-            } else {
+            } else if (view.text == "0") {
+            } else
                 output.append(view.text)
-            }
             canAddOperation = true
             reset = false
         }
@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
                 canAddOperation = false
                 canCalculate = true
             } else {
-                output.text = autoCalculateResults()
+                output.text = autoCalculateResults(view.text[0])
                 canAddOperation = false
             }
             isEqualPreviousClick = false
@@ -46,7 +46,6 @@ class MainActivity : AppCompatActivity() {
 
     fun allClearAction(view: View) {
         output.text = "0"
-        println(output.text == "0")
         isEqualPreviousClick = false
         reset = true
     }
@@ -79,14 +78,28 @@ class MainActivity : AppCompatActivity() {
     private fun calculateResult(): String {
         var digitsOperators = mutableListOf<Any>()
         var currentDigit = ""
+        var isFirstIteration = true
         for (character in output.text) {
-            if (character.isDigit() || character == '.')
-                currentDigit += character
-            else {
-                digitsOperators.add(currentDigit.toFloat())
-                currentDigit = ""
-                digitsOperators.add(character)
+            if (isFirstIteration) {
+                if (character.isDigit() || character == '.' || character == '-')
+                    currentDigit += character
+                else {
+                    digitsOperators.add(currentDigit.toFloat())
+                    currentDigit = ""
+                    digitsOperators.add(character)
+                }
+                isFirstIteration = false
+            } else {
+                if (character.isDigit() || character == '.')
+                    currentDigit += character
+                else {
+                    digitsOperators.add(currentDigit.toFloat())
+                    currentDigit = ""
+                    digitsOperators.add(character)
+                }
             }
+
+
         }
 
         if (currentDigit != "")
@@ -138,7 +151,7 @@ class MainActivity : AppCompatActivity() {
             return stringResult + operator as Char
     }
 
-    private fun autoCalculateResults(): String {
+    private fun autoCalculateResults(nextOperator: Char): String {
         val digitsOperators = mutableListOf<Any>()
         var currentDigit = ""
         for (character in output.text) {
@@ -156,8 +169,6 @@ class MainActivity : AppCompatActivity() {
         if (digitsOperators.isEmpty()) return ""
 
         var result = digitsOperators[0] as Float
-
-        var operatorParam: Any? = null
 
         for (i in digitsOperators.indices) {
             if (digitsOperators[i] is Char && i != digitsOperators.lastIndex) {
@@ -178,91 +189,26 @@ class MainActivity : AppCompatActivity() {
                 if (operator == '%') {
                     result %= nextDigit
                 }
-                operatorParam = operator as Char
             }
         }
 
-        return stringifyResult(result, operatorParam)
+        return stringifyResult(result, nextOperator)
     }
 
-    private fun addSubtractCalculate(passedList: MutableList<Any>): Float {
-        var result = passedList[0] as Float
-
-        for (i in passedList.indices) {
-            if (passedList[i] is Char && i != passedList.lastIndex) {
-                val operator = passedList[i]
-                val nextDigit = passedList[i + 1] as Float
-                if (operator == '+') {
-                    result += nextDigit
-                    println("add")
-                }
-                if (operator == '−') {
-                    result -= nextDigit
-                    println("sous")
+    fun negAction(view: View) {
+        if (view is Button) {
+            if (canAddOperation && !reset) {
+                val outputText = output.text
+                println(outputText[0])
+                if (outputText[0] == '-') {
+                    output.text = outputText.substring(1)
+                } else {
+                    val outputText = output.text
+                    val newOut = "-$outputText"
+                    output.text = newOut
                 }
             }
         }
-
-        return result
-    }
-
-    private fun timesDivisionCalculate(passedList: MutableList<Any>): MutableList<Any> {
-        var list = passedList
-        while (list.contains('×') || list.contains('÷')) {
-            list = calcTimesDiv(list)
-        }
-        return list
-    }
-
-    private fun calcTimesDiv(passedList: MutableList<Any>): MutableList<Any> {
-        val newList = mutableListOf<Any>()
-        var restartIndex = passedList.size
-
-        for (i in passedList.indices) {
-            if (passedList[i] is Char && i != passedList.lastIndex && i < restartIndex) {
-                val operator = passedList[i]
-                val prevDigit = passedList[i - 1] as Int
-                val nextDigit = passedList[i + 1] as Int
-                when (operator) {
-                    '×' -> {
-                        newList.add(prevDigit * nextDigit)
-                        restartIndex = i + 1
-                    }
-                    '÷' -> {
-                        newList.add(prevDigit / nextDigit)
-                        restartIndex = i + 1
-                    }
-                    else -> {
-                        newList.add(prevDigit)
-                        newList.add(operator)
-                    }
-                }
-            }
-
-            if (i > restartIndex)
-                newList.add(passedList[i])
-        }
-
-        return newList
-    }
-
-    private fun digitsOperators(): MutableList<Any> {
-        val list = mutableListOf<Any>()
-        var currentDigit = ""
-        for (character in output.text) {
-            if (character.isDigit() || character == '.')
-                currentDigit += character
-            else {
-                list.add(currentDigit.toFloat())
-                currentDigit = ""
-                list.add(character)
-            }
-        }
-
-        if (currentDigit != "")
-            list.add(currentDigit.toFloat())
-
-        return list
     }
 
 }
