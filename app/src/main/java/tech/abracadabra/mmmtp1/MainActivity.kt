@@ -18,6 +18,24 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putCharSequence("outputText", output.text)
+        outState.putBoolean("canAddOperation", canAddOperation)
+        outState.putBoolean("canCalculate", canCalculate)
+        outState.putBoolean("isEqualPreviousClick", isEqualPreviousClick)
+        outState.putBoolean("reset", reset)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        output.text = savedInstanceState.getCharSequence("outputText")
+        canAddOperation = savedInstanceState.getBoolean("canAddOperation")
+        canCalculate = savedInstanceState.getBoolean("canCalculate")
+        isEqualPreviousClick = savedInstanceState.getBoolean("isEqualPreviousClick")
+        reset = savedInstanceState.getBoolean("reset")
+    }
+
     fun numberAction(view: View) {
         if (view is Button) {
             if (isEqualPreviousClick || reset) {
