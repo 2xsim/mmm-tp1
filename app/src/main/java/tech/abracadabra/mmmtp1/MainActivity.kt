@@ -12,6 +12,7 @@ class MainActivity : AppCompatActivity() {
     private var canCalculate = false
     private var isEqualPreviousClick = false
     private var reset = true
+    private var isZeroPreviousClickAndFirstNumber = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +26,7 @@ class MainActivity : AppCompatActivity() {
         outState.putBoolean("canCalculate", canCalculate)
         outState.putBoolean("isEqualPreviousClick", isEqualPreviousClick)
         outState.putBoolean("reset", reset)
+        outState.putBoolean("isZeroPreviousClickAndFirstNumber", isZeroPreviousClickAndFirstNumber)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -34,17 +36,21 @@ class MainActivity : AppCompatActivity() {
         canCalculate = savedInstanceState.getBoolean("canCalculate")
         isEqualPreviousClick = savedInstanceState.getBoolean("isEqualPreviousClick")
         reset = savedInstanceState.getBoolean("reset")
+        isZeroPreviousClickAndFirstNumber =
+            savedInstanceState.getBoolean("isZeroPreviousClickAndFirstNumber")
     }
 
     fun numberAction(view: View) {
         if (view is Button) {
-            if (isEqualPreviousClick || reset) {
+            if (isEqualPreviousClick || reset || isZeroPreviousClickAndFirstNumber) {
                 output.text = view.text
+                isZeroPreviousClickAndFirstNumber = view.text == "0"
             } else if (view.text == "0") {
             } else
                 output.append(view.text)
             canAddOperation = true
             reset = false
+            isEqualPreviousClick = false
         }
     }
 
@@ -63,18 +69,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun allClearAction(view: View) {
-        output.text = "0"
+        output.text = ""
         isEqualPreviousClick = false
         reset = true
+        canAddOperation = false
     }
 
     fun backSpaceAction(view: View) {
         val length = output.length()
 
         if (length > 0) {
-            if (length - 1 == 0) {
-                output.text = "0"
+            if (length - 1 == 0 || (length == 2 && output.text[0] == '-')) {
+                output.text = ""
                 reset = true
+                canAddOperation = false
             } else if (output.text.endsWith('+') || output.text.endsWith('−') ||
                 output.text.endsWith('×') || output.text.endsWith('÷') || output.text.endsWith('%')
             ) {
